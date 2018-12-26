@@ -21,8 +21,6 @@ def main():
     vals = { 'theDate' : '0', 'theTime' : '0', 'theDuration' : '0', 'kdp' : [] }
     usrInput = ''
 
-
-
     # enter main loop
     while(usrInput != 'e'):
         print('1) Input meeting date')
@@ -54,18 +52,18 @@ def main():
             print('Meeting end time: ' + vals['theDuration'])
             if(len(vals['kdp']) > 0):
                 configItem = config['key_decisions']
-                print('\n/\\_________________________________________/\\')
+
                 print('|-- ID | TOPIC | PRESENTER | ACTION | TIME --|')
                 print('L------I-------I-----------I--------I--------J\n')
                 for n in vals['kdp']:
-                    print('r-----------------------')
+                    print('r-----')
                     print('| ' +
                         n[configItem['id']] + ' + ' +
                         n[configItem['topic']] + ' + ' +
                         n[configItem['presenter']] + ' + ' +
                         n[configItem['action']] + ' + ' +
                         n[configItem['time']])
-                    print('L_______________________')
+                    print('L_____')
 
             input('...')
 
@@ -110,9 +108,24 @@ def AddItem(config, theTime,listLen):
     item[configItem['topic']] = input('enter the name of the item: ')
     item[configItem['presenter']] = input('enter the initials of the presenter: ')
     item[configItem['time']] = xDigitInput('Enter the duration of the item in minutes: ',1,3)
-    item[configItem['action']] = 'TODO'
+    item[configItem['action']] = SelectAction()
 
     return item
+
+
+def SelectAction():
+    print("Select Action: \nA)pproval\nE)ndorsement\nD)iscussion")
+
+    tooMuchMan = {'A' : 'Approval',
+                'E' : 'Endorsement',
+                'D' : 'Discussion'}
+    x = ''
+    while (True):
+        x = input('--> ').upper()
+        if x in tooMuchMan.keys():
+            return tooMuchMan[x]
+        else:
+            print("Invalid option")
 
 
 
