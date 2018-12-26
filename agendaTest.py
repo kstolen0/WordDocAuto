@@ -34,8 +34,9 @@ def main():
 
 
         usrInput = input('--> ').upper()
-
-        if('DATE'.startswith(usrInput)):
+        if(len(usrInput) < 1):
+            continue
+        elif('DATE'.startswith(usrInput)):
             vals['theDate'] = dateInput()
             input('success!')
 
@@ -281,8 +282,12 @@ def MakeDoc(vals, config):
         agendaFile = dir_path + "\\" + config['docFile']
 
         print(agendaFile)
+        dates = vals['theDate'].split('/')
+        month = datetime.date(int(dates[2]),int(dates[1]),int(dates[0])).strftime('%B')
+        fileDate = dates[0] + ' ' + month + ' ' + dates[2]
+
         template = {}
-        template[config['meeting_date']] = vals['theDate']
+        template[config['meeting_date']] = fileDate
         template[config['meeting_time']] = to12hour(vals['theTime'])
         template[config['meeting_duration']] = to12hour(vals['theDuration'])
         kdpItems = vals['kdp']
@@ -301,9 +306,9 @@ def MakeDoc(vals, config):
 
         doc.merge(**template)
         doc.merge_rows(config['key_decisions']['id'],kdpItems)
-
-        docName = '1.0BWCC ' + vals['theDate'].replace('/','-') + '.docx'
+        docName = '1.0 BW Cloud Council Agenda - ' + fileDate + ' v1.0.docx'
         doc.write(docName)
+
     except Exception as e:
         print('Error in making doc-- ' + str(e))
 
