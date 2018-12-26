@@ -25,29 +25,30 @@ def main():
     usrInput = ''
 
     # enter main loop
-    while(usrInput != 'E'):
-        print('1) Input meeting date\t\tL) Load meeting details\t\t\te) Exit')
-        print('2) Input meeting time\t\tA) Add agenda item')
-        print('3) Input meeting duration\tS) Sort agenda items')
-        print('4) Display meeting details\tC) Create doc\n')
+    while(usrInput != 'Q'):
+        print('Input meeting <date>\t\t<Load> meeting details\t\t\t<Create> doc')
+        print('Input meeting <time>\t\t<Add> agenda item\t\t\t<Quit>')
+        print('Input meeting <duration>\t<Edit> agenda item')
+        print('<Display> meeting details\t<Sort> agenda items\n')
+
 
 
         usrInput = input('--> ').upper()
 
-        if(usrInput == '1'):
+        if('DATE'.startswith(usrInput)):
             vals['theDate'] = dateInput()
             input('success!')
 
-        elif(usrInput == '2'):
+        elif('TIME'.startswith(usrInput)):
             vals['theTime'] = timeInput()
             input('success!')
 
-        elif(usrInput == '3'):  # returns the time added to vals['theTime'] in 24 hour format
+        elif('DURATION'.startswith(usrInput)):  # returns the time added to vals['theTime'] in 24 hour format
             duration = inputDuration('Enter the duration of the meeting in minutes: ',vals['theTime'])
             vals['theDuration'] = addTime(vals['theTime'],duration)
             input('success!')
 
-        elif(usrInput == '4'): # print all fields
+        elif('DISPLAY'.startswith(usrInput)): # print all fields
             print('Meeting date: ' + vals['theDate'])
             print('Meeting start time: ' + vals['theTime'])
             print('Meeting end time: ' + vals['theDuration'])
@@ -56,7 +57,7 @@ def main():
 
             input('...')
 
-        elif(usrInput == 'L'):
+        elif('LOAD'.startswith(usrInput)):
             if(UserConfirmed('Overwrite current data with saved data (Y/N): ')): # confirm we want to overwrite
                 try:
                     vals = LoadFile('save.json') # if a failure occurs, don't overwrite the current vals
@@ -64,20 +65,23 @@ def main():
                     print("failed: " + str(e))
                     print(vals)
 
-        elif(usrInput == 'A'):
+        elif('ADD'.startswith(usrInput)):
             item = AddItem(config, vals['theTime'], len(vals['kdp']))
             vals['kdp'].append(item)
-            print(vals)
 
-        elif(usrInput == 'S'):
+
+        elif('EDIT'.startswith(usrInput)):
+            EditItem(config,vals)
+
+        elif('SORT'.startswith(usrInput)):
             SortItems(config,vals)
 
-        elif(usrInput == 'C'):
+        elif('CREATE'.startswith(usrInput)):
             MakeDoc(vals, config)
             input('success!')
 
-        elif(usrInput == 'E'):
-            pass
+        elif('QUIT'.startswith(usrInput)):
+            usrInput = 'Q'
 
         else:
             print("Invalid input")
@@ -90,6 +94,23 @@ def main():
 
     with open('save.json','w') as outfile:
         json.dump(saveFile,outfile,indent=4)
+
+def EditItem(config,vals):
+    DisplayItems(config,vals)
+    configItem = config['key_decisions']
+    listLen = len(vals['kdp']) + 1
+    options = list(range(1,listLen))
+    x = 0
+    while(x == 0):
+
+        idx = xDigitInput('Select the ID you with to edit ' + str(options) + ': ', 1, len(str(listLen)))
+        idx = int(idx)
+        if idx <= listLen:
+            vals['kdp'][idx-1] = AddItem(config,vals['theTime'], idx-2)
+            x += 1
+        else:
+            print("invalid option")
+
 
 def SortItems(config,vals):
     DisplayItems(config,vals)
