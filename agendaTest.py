@@ -26,15 +26,11 @@ def main():
 
     # enter main loop
     while(usrInput != 'E'):
-        print('1) Input meeting date')
-        print('2) Input meeting time')
-        print('3) Input meeting duration')
-        print('4) Display meeting details\n')
-        
-        print('L) Load meeting details')
-        print('A) Add agenda item')
-        print('C) Create doc')
-        print('E) Exit')
+        print('1) Input meeting date\t\tL) Load meeting details\t\t\te) Exit')
+        print('2) Input meeting time\t\tA) Add agenda item')
+        print('3) Input meeting duration\tS) Sort agenda items')
+        print('4) Display meeting details\tC) Create doc\n')
+
 
         usrInput = input('--> ').upper()
 
@@ -56,24 +52,12 @@ def main():
             print('Meeting start time: ' + vals['theTime'])
             print('Meeting end time: ' + vals['theDuration'])
             if(len(vals['kdp']) > 0):
-                configItem = config['key_decisions']
-
-                print('|-- ID | TOPIC | PRESENTER | ACTION | TIME --|')
-                print('L------I-------I-----------I--------I--------J\n')
-                for n in vals['kdp']:
-                    print('r-----')
-                    print('| ' +
-                        n[configItem['id']] + ' + ' +
-                        n[configItem['topic']] + ' + ' +
-                        n[configItem['presenter']] + ' + ' +
-                        n[configItem['action']] + ' + ' +
-                        n['time'])
-                    print('L_____')
+                DisplayItems(config,vals)
 
             input('...')
 
         elif(usrInput == 'L'):
-            if(UserConfirmed()): # confirm we want to overwrite
+            if(UserConfirmed('Overwrite current data with saved data (Y/N): ')): # confirm we want to overwrite
                 try:
                     vals = LoadFile('save.json') # if a failure occurs, don't overwrite the current vals
                 except Exception as e: # need more explicit exceptions?
@@ -84,6 +68,9 @@ def main():
             item = AddItem(config, vals['theTime'], len(vals['kdp']))
             vals['kdp'].append(item)
             print(vals)
+
+        elif(usrInput == 'S'):
+            SortItems(config,vals)
 
         elif(usrInput == 'C'):
             MakeDoc(vals, config)
@@ -96,8 +83,7 @@ def main():
             print("Invalid input")
 
 
-        # os.system('cls')
-
+        os.system('cls')
 
     # save vals to json file
     saveFile = vals
@@ -105,13 +91,55 @@ def main():
     with open('save.json','w') as outfile:
         json.dump(saveFile,outfile,indent=4)
 
+def SortItems(config,vals):
+    DisplayItems(config,vals)
+    configItem = config['key_decisions']
+    x = 0
+    while(x == 0):
+        options = list(range(1,len(vals['kdp'])+1))
+        prefOptions = []
+
+        while (len(options) > 0):
+            print(options)
+            usrInput = xDigitInput("Enter the next ID: ",1,len(str(len(vals['kdp']))))
+            if int(usrInput) in options:
+                prefOptions.append(int(usrInput))
+                options.remove(int(usrInput))
+            else:
+                print("invalid option")
+        print(list(range(1,len(vals['kdp'])+1)))
+        print(prefOptions)
+        if(UserConfirmed('Sort into new order (Y/N)? ')):
+            newList = []
+            for n in prefOptions:
+                newList.append(vals['kdp'][n-1])
+            for i in range(len(newList)):
+                newList[i][configItem['id']] = configItem['code'] + '.' + str(i+1)
+            vals['kdp'] = newList
+            x += 1
+
+def DisplayItems(config, vals):
+    configItem = config['key_decisions']
+
+    print('|-- ID | TOPIC | PRESENTER | ACTION | TIME --|')
+    print('L------I-------I-----------I--------I--------J\n')
+    for n in vals['kdp']:
+        print('r-----')
+        print('| ' +
+            n[configItem['id']] + ' + ' +
+            n[configItem['topic']] + ' + ' +
+            n[configItem['presenter']] + ' + ' +
+            n[configItem['action']] + ' + ' +
+            n['time'])
+        print('L_____')
+
 def AddItem(config, theTime, listLen):
     item = {}
     configItem = config['key_decisions']
 
     item[configItem['id']] = configItem['code'] + '.' + str(listLen + 1)
     item[configItem['topic']] = input('enter the name of the item: ')
-    item[configItem['presenter']] = input('enter the initials of the presenter: ')
+    item[configItem['presenter']] = input('enter the initials of the presenter: ').upper()
     item['time'] = xDigitInput('Enter the duration of the item in minutes: ',1,3)
     item[configItem['time']] = '0'
     item[configItem['action']] = SelectAction()
@@ -245,7 +273,7 @@ def MakeDoc(vals, config):
         for n in kdpItems:
             temp = n['time']
             n[configItem['time']] = to12hour((addTime(vals['theTime'],int(totalTime)))) + ' - ' + str(n['time']) + ' mins'
-            
+
             totalTime += int(temp)
 
         doc = MailMerge(agendaFile)
@@ -265,10 +293,10 @@ def LoadFile(fileName):
 
     return vals
 
-def UserConfirmed():
+def UserConfirmed(query):
     x = ''
     while not (x == 'Y' or x == 'N'):
-        x = input('Overwrite current data with saved data (Y/N): ').upper()
+        x = input(query).upper()
 
     return (x == 'Y')
 
