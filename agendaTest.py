@@ -78,7 +78,9 @@ def main():
             SortItems(config,vals)
 
         elif('CREATE'.startswith(usrInput)):
-            MakeDoc(vals, config)
+            MakeAgenda(vals, config)
+            MakeMinutes(vals,config)
+            MakeActions(vals,config)
             input('success!')
 
         elif('QUIT'.startswith(usrInput)):
@@ -275,16 +277,18 @@ def xDigitInput(inputString,minLen,maxLen):
 
     return usrInput
 
-# function to create a new word doc based on a template, filling in the mergeFields within the source file
-def MakeDoc(vals, config):
+# function to create a new Agenda doc based on a template, filling in the mergeFields within the source file
+def MakeAgenda(vals, config):
 
     try:
-        agendaFile = dir_path + "\\" + config['docFile']
+        agendaFile = dir_path + "\\" + config['agendaFile']
 
         print(agendaFile)
         dates = vals['theDate'].split('/')
-        month = datetime.date(int(dates[2]),int(dates[1]),int(dates[0])).strftime('%B')
+        month = GetMonth(dates)
+        folderName = dates[2][2:] + dates[1] + dates[0] 
         fileDate = dates[0] + ' ' + month + ' ' + dates[2]
+        CreateFolder(folderName)
 
         template = {}
         template[config['meeting_date']] = fileDate
@@ -306,11 +310,48 @@ def MakeDoc(vals, config):
 
         doc.merge(**template)
         doc.merge_rows(config['key_decisions']['id'],kdpItems)
-        docName = '1.0 BW Cloud Council Agenda - ' + fileDate + ' v1.0.docx'
+        docName = folderName + '/1.0 BW Cloud Council Agenda - ' + fileDate + ' v1.0.docx'
         doc.write(docName)
 
     except Exception as e:
         print('Error in making doc-- ' + str(e))
+
+def MakeMinutes(vals,config):
+    try: 
+        minutesFile = dir_path + "\\" + config['minutesFile']
+
+        dates = vals['theDate'].split('/') 
+        month = GetMonth(dates)
+        folderName = dates[2][2:] + dates[1] + dates[0] 
+        fileDate = dates[0] + ' ' + month + ' ' + dates[2] 
+        CreateFolder(folderName) 
+        template = {} 
+        template[config['meeting_date']] = fileDate
+
+        doc = MailMerge(minutesFile) 
+        doc.merge(**template) 
+        filePrefix = dates[2][2:] + '.' + dates[1] + '.' + dates[0] 
+        fileSuffix = month + ' ' + dates[0] 
+        docName = folderName + '/' + filePrefix + ' BW Cloud Council - Minutes ' + fileSuffix + '.docx'
+        doc.write(docName)
+
+    except Exception as e:
+        print(e) 
+
+def MakeActions(vals,config): 
+    try: 
+        actionsFile = dir_path + "\\" + config["actionsFile"] 
+        dates = vals['theDate'].split('/')        
+        folderName = dates[2][2:] + dates[1] + dates[0] 
+        CreateFolder(folderName) 
+
+        doc = MailMerge(actionsFile) 
+        filePrefix = dates[2][2:] + '.' + dates[1] + '.' + dates[0] 
+        fileSuffix = GetMonth(dates) + ' ' + dates[0] 
+        docName = folderName + '/' + filePrefix + ' BW Cloud Council - Actions Log ' + fileSuffix + '.docx'
+        doc.write(docName)
+    except Exception as e: 
+        print(e)  
 
 def LoadFile(fileName):
 
@@ -326,9 +367,19 @@ def UserConfirmed(query):
 
     return (x == 'Y')
 
+def GetMonth(dates): 
 
+    return datetime.date(int(dates[2]),int(dates[1]),int(dates[0])).strftime('%B')
+
+def CreateFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print ('Error: Creating directory. ' + directory)
 
 try:
     main()
 except Exception as e:
     input("over:" + str(e))
+
